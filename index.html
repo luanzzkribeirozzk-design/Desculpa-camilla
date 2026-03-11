@@ -1,98 +1,525 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pedido de Desculpas</title>
-
+<title>Para Camila 💕</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@400;600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
 <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', sans-serif;
-    }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --rose: #ff4d6d;
+    --blush: #ff85a1;
+    --soft: #ffb3c1;
+    --deep: #c9184a;
+    --gold: #f4a261;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #110008;
+    min-height: 100vh;
+    font-family: 'Lato', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+  .bg-fixed {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 50%, rgba(180,0,60,.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 30%, rgba(255,77,109,.10) 0%, transparent 55%),
+      linear-gradient(160deg, #120009 0%, #1f0014 50%, #110008 100%);
+    z-index: 0;
+  }
+  .cursor {
+    position: fixed; width: 16px; height: 16px;
+    background: var(--rose); border-radius: 50%;
+    pointer-events: none; z-index: 99999;
+    transform: translate(-50%,-50%);
+    mix-blend-mode: screen;
+    box-shadow: 0 0 18px var(--rose), 0 0 36px var(--blush);
+  }
+  .cursor-trail {
+    position: fixed; width: 7px; height: 7px;
+    background: var(--blush); border-radius: 50%;
+    pointer-events: none; z-index: 99998;
+    transform: translate(-50%,-50%); opacity: .55;
+  }
+  #canvas {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    z-index: 1; pointer-events: none;
+  }
+  .floating-heart, .petal, .sparkle {
+    position: fixed; pointer-events: none; z-index: 2;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(110vh) rotate(-10deg) scale(.5); opacity: 0; }
+    8%   { opacity: .85; }
+    90%  { opacity: .4; }
+    100% { transform: translateY(-15vh) rotate(12deg) scale(1.1); opacity: 0; }
+  }
+  @keyframes petalFall {
+    0%   { transform: translateY(-5vh) translateX(0) rotate(0deg); opacity: 0; }
+    8%   { opacity: .9; }
+    90%  { opacity: .45; }
+    100% { transform: translateY(110vh) translateX(60px) rotate(400deg); opacity: 0; }
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0; transform: scale(.4) rotate(0deg); }
+    50%     { opacity: 1; transform: scale(1.3) rotate(180deg); }
+  }
 
-    body {
-        height: 100vh;
-        background: linear-gradient(135deg, #0f001a, #1a0033);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        text-align: center;
-    }
+  /* ── SEÇÕES ── */
+  section {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 80px 24px;
+  }
 
-    .container {
-        width: 90%;
-        max-width: 400px;
-        padding: 30px;
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 2px solid #b026ff;
-        box-shadow: 0 0 20px #b026ff, 0 0 40px #7a00ff;
-        animation: fadeIn 1.5s ease-in-out;
-    }
+  /* ── SCROLL BLOCKS ── */
+  .sb {
+    will-change: opacity, transform;
+    transition:
+      opacity .6s cubic-bezier(.4,0,.2,1),
+      transform .6s cubic-bezier(.4,0,.2,1);
+  }
+  /* Estados de entrada (vem de baixo por padrão) */
+  .sb-bot  { opacity: 0; transform: translateY(55px); }
+  .sb-left { opacity: 0; transform: translateX(-55px); }
+  .sb-right{ opacity: 0; transform: translateX(55px); }
+  .sb-zoom { opacity: 0; transform: scale(.82); }
+  /* Visível */
+  .sb-on   { opacity: 1 !important; transform: none !important; }
+  /* Saindo pra cima */
+  .sb-out-up    { opacity: 0 !important; transform: translateY(-45px) !important; }
+  .sb-out-left  { opacity: 0 !important; transform: translateX(-45px) scale(.95) !important; }
+  .sb-out-right { opacity: 0 !important; transform: translateX(45px) scale(.95) !important; }
+  .sb-out-zoom  { opacity: 0 !important; transform: scale(1.1) !important; }
 
-    h1 {
-        font-size: 26px;
-        margin-bottom: 20px;
-        color: #d580ff;
-        text-shadow: 0 0 10px #b026ff;
-    }
+  /* ── HERO ── */
+  .hero { text-align: center; gap: 20px; }
+  .hero-badge {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(13px,3vw,17px);
+    color: var(--blush); letter-spacing: 5px; text-transform: uppercase;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic; font-weight: 700;
+    font-size: clamp(64px,14vw,128px);
+    color: transparent;
+    background: linear-gradient(135deg,#ff4d6d,#ffb3c1,#f4a261,#ff85a1);
+    -webkit-background-clip: text; background-clip: text;
+    background-size: 300% 300%;
+    animation: gradS 4s ease infinite;
+    filter: drop-shadow(0 0 28px rgba(255,77,109,.55));
+    line-height: 1;
+  }
+  @keyframes gradS { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+  .hero-subtitle {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(22px,5vw,46px); color: var(--soft);
+  }
+  .hero-names {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(14px,2.5vw,20px);
+    color: var(--blush); letter-spacing: 3px;
+  }
+  .hero-heart {
+    font-size: clamp(64px,14vw,110px); display: inline-block;
+    animation: hb 1.3s ease-in-out infinite; cursor: pointer;
+    filter: drop-shadow(0 0 28px var(--rose)) drop-shadow(0 0 55px var(--deep));
+  }
+  @keyframes hb {
+    0%,100%{transform:scale(1)} 14%{transform:scale(1.22)}
+    28%{transform:scale(1)}    42%{transform:scale(1.14)} 70%{transform:scale(1)}
+  }
+  .scroll-hint {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--blush); font-size: 11px; letter-spacing: 3px;
+    text-transform: uppercase; margin-top: 28px;
+  }
+  .scroll-arrow {
+    width: 22px; height: 22px;
+    border-right: 2px solid var(--blush); border-bottom: 2px solid var(--blush);
+    transform: rotate(45deg); animation: ab 1.5s ease-in-out infinite;
+  }
+  @keyframes ab {
+    0%,100%{transform:rotate(45deg) translateY(0)} 50%{transform:rotate(45deg) translateY(7px)}
+  }
+  .divider {
+    width: 100px; height: 1.5px;
+    background: linear-gradient(90deg,transparent,var(--rose),transparent);
+  }
+  .section-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(34px,8vw,68px);
+    color: var(--rose); text-align: center;
+    filter: drop-shadow(0 0 18px rgba(255,77,109,.5));
+  }
 
-    p {
-        font-size: 16px;
-        line-height: 1.6;
-        margin-bottom: 25px;
-        color: #f0d9ff;
-    }
+  /* ── MENSAGEM ── */
+  .message-section { gap: 36px; }
+  .message-card {
+    max-width: 660px; width: 100%;
+    background: linear-gradient(135deg,rgba(255,77,109,.06),rgba(255,179,193,.04));
+    border: 1px solid rgba(255,133,161,.2); border-radius: 24px;
+    padding: clamp(28px,6vw,52px);
+    backdrop-filter: blur(12px); position: relative; overflow: hidden;
+    box-shadow: 0 0 60px rgba(255,77,109,.1), inset 0 0 50px rgba(255,77,109,.03);
+  }
+  .message-card::before {
+    content: '❝'; position: absolute; top: 16px; left: 24px;
+    font-size: 76px; color: rgba(255,77,109,.13);
+    font-family: 'Playfair Display',serif; line-height: 1;
+  }
+  .message-text {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: clamp(16px,2.8vw,21px); color: #ffe0e9;
+    line-height: 1.9; text-align: center;
+  }
+  .message-text strong { color: var(--rose); font-style: normal; text-shadow: 0 0 14px rgba(255,77,109,.5); }
+  .signature {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(20px,4vw,34px);
+    color: var(--blush); text-align: right; margin-top: 24px;
+  }
 
-    .btn {
-        display: inline-block;
-        padding: 12px 25px;
-        border-radius: 30px;
-        border: none;
-        background: #b026ff;
-        color: white;
-        font-weight: bold;
-        font-size: 15px;
-        cursor: pointer;
-        transition: 0.3s;
-        box-shadow: 0 0 15px #b026ff;
-    }
+  /* ── RAZÕES ── */
+  .reasons-section { gap: 44px; }
+  .reasons-grid {
+    display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap: 18px; max-width: 860px; width: 100%;
+  }
+  .reason-card {
+    background: linear-gradient(135deg,rgba(255,77,109,.05),rgba(255,214,224,.04));
+    border: 1px solid rgba(255,133,161,.15); border-radius: 20px;
+    padding: 30px 22px; text-align: center;
+    transition: transform .3s, box-shadow .3s, border-color .3s;
+    cursor: default; position: relative; overflow: hidden;
+  }
+  .reason-card::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%,rgba(255,77,109,.12),transparent 70%);
+    opacity: 0; transition: opacity .3s;
+  }
+  .reason-card:hover { transform: translateY(-7px) scale(1.02); box-shadow: 0 18px 55px rgba(255,77,109,.22); border-color: rgba(255,133,161,.4); }
+  .reason-card:hover::after { opacity: 1; }
+  .reason-emoji { font-size: 38px; display: block; margin-bottom: 14px; animation: wob 3.5s ease-in-out infinite; }
+  @keyframes wob { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+  .reason-title { font-family: 'Dancing Script',cursive; font-size: 21px; color: var(--rose); margin-bottom: 8px; }
+  .reason-desc  { font-size: 13.5px; color: rgba(255,214,224,.68); line-height: 1.7; }
 
-    .btn:hover {
-        background: #d580ff;
-        box-shadow: 0 0 25px #d580ff;
-        transform: scale(1.05);
-    }
+  /* ── NOMES ── */
+  .names-section { gap: 32px; }
+  .names-cloud { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 680px; }
+  .name-tag {
+    font-family: 'Dancing Script', cursive;
+    padding: 11px 22px; border-radius: 50px;
+    border: 1.5px solid rgba(255,133,161,.3);
+    color: var(--soft); font-size: clamp(15px,3vw,21px);
+    background: rgba(255,77,109,.05); backdrop-filter: blur(5px);
+    animation: fb ease-in-out infinite;
+    transition: all .3s ease;
+    box-shadow: 0 0 18px rgba(255,77,109,.07);
+  }
+  .name-tag:hover { background: rgba(255,77,109,.15); border-color: var(--rose); color: #fff; transform: scale(1.1) translateY(-4px); box-shadow: 0 10px 38px rgba(255,77,109,.3); }
+  @keyframes fb { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+  /* ── FINAL ── */
+  .final-section { text-align: center; gap: 28px; min-height: 80vh; }
+  .final-hearts { display: flex; gap: 14px; justify-content: center; font-size: 38px; animation: fp 2s ease-in-out infinite; }
+  @keyframes fp {
+    0%,100%{transform:scale(1);filter:drop-shadow(0 0 10px rgba(255,77,109,.5))}
+    50%{transform:scale(1.1);filter:drop-shadow(0 0 28px rgba(255,77,109,.9))}
+  }
+  .final-title {
+    font-family: 'Playfair Display',serif; font-style: italic;
+    font-size: clamp(30px,7vw,68px); color: transparent;
+    background: linear-gradient(135deg,var(--rose),var(--gold),var(--soft));
+    -webkit-background-clip: text; background-clip: text;
+    background-size: 200%; animation: gradS 3s ease infinite;
+    filter: drop-shadow(0 0 18px rgba(255,77,109,.3));
+  }
+  .final-msg {
+    font-family: 'Dancing Script',cursive;
+    font-size: clamp(17px,4vw,30px); color: var(--blush);
+    max-width: 480px; text-align: center; line-height: 1.65;
+  }
+  .forever-badge {
+    display: inline-block; padding: 13px 34px;
+    border: 2px solid var(--rose); border-radius: 50px;
+    font-family: 'Playfair Display',serif;
+    font-size: clamp(13px,2.2vw,17px); letter-spacing: 4px;
+    color: var(--rose); text-transform: uppercase;
+    background: rgba(255,77,109,.05);
+    animation: gp 2.5s ease-in-out infinite;
+  }
+  @keyframes gp {
+    0%,100%{box-shadow:0 0 20px rgba(255,77,109,.2),inset 0 0 20px rgba(255,77,109,.03)}
+    50%{box-shadow:0 0 48px rgba(255,77,109,.5),inset 0 0 28px rgba(255,77,109,.08)}
+  }
+
+  /* CLICK HEARTS */
+  .click-heart {
+    position: fixed; pointer-events: none; z-index: 99990; font-size: 22px;
+    animation: cha .8s ease forwards;
+  }
+  @keyframes cha {
+    0%  {transform:translate(-50%,-50%) scale(0);opacity:1}
+    60% {transform:translate(-50%,-80%) scale(1.5);opacity:.9}
+    100%{transform:translate(-50%,-145%) scale(.6);opacity:0}
+  }
+
+  @media(max-width:600px){
+    .reasons-grid{grid-template-columns:1fr 1fr}
+    .message-card{padding:26px 18px}
+  }
 </style>
 </head>
-
 <body>
 
-<div class="container">
-    <h1>Me Perdoa 💜</h1>
-    <p>
-        Se em algum momento eu fiz algo errado ou te magoei, 
-        quero que saiba que nunca foi minha intenção.
-        Peço desculpas de coração. Você é importante para mim.
-    </p>
-    <button class="btn">Eu Sinto Muito</button>
-</div>
+<div class="bg-fixed"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-trail" id="trail"></div>
+<canvas id="canvas"></canvas>
 
+<!-- HERO -->
+<section class="hero">
+  <p class="sb sb-bot hero-badge" data-in="sb-bot" data-out="sb-out-up">✦ uma mensagem especial ✦</p>
+  <h1 class="sb sb-zoom hero-title" data-in="sb-zoom" data-out="sb-out-zoom">Camila</h1>
+  <p class="sb sb-bot hero-subtitle" data-in="sb-bot" data-out="sb-out-up" style="transition-delay:.08s">meu maior amor 🌹</p>
+  <div class="sb sb-zoom hero-heart" id="mainHeart" data-in="sb-zoom" data-out="sb-out-zoom" style="transition-delay:.14s">💖</div>
+  <p class="sb sb-bot hero-names" data-in="sb-bot" data-out="sb-out-up" style="transition-delay:.2s">Amorzinho · Mohzinho · Moh ✨</p>
+  <div class="sb sb-bot scroll-hint" data-in="sb-bot" data-out="sb-out-up" style="transition-delay:.28s">
+    <span>role pra baixo</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- MENSAGEM -->
+<section class="message-section" style="gap:36px">
+  <h2 class="sb sb-bot section-title" data-in="sb-bot" data-out="sb-out-up">Do fundo do meu coração</h2>
+  <div class="sb sb-bot divider"       data-in="sb-bot" data-out="sb-out-up" style="transition-delay:.06s"></div>
+  <div class="sb sb-bot message-card"  data-in="sb-bot" data-out="sb-out-up" style="transition-delay:.12s">
+    <p class="message-text">
+      <strong>Camila</strong>, você é a parte mais bonita de cada dia que passa.<br><br>
+      Desde que você chegou na minha vida, tudo ficou mais <strong>colorido</strong>,
+      mais leve, mais cheio de sentido.<br><br>
+      Você tem um jeito único de me fazer sorrir mesmo nos dias que parecem difíceis —
+      só de existir, só de ser você — e isso, <strong>meu amor</strong>, não tem preço nenhum.<br><br>
+      Você é meu <strong>amorzinho</strong>, minha <strong>Moh</strong>, meu lugar favorito no mundo. 🌸
+    </p>
+    <p class="signature">com todo meu amor 💕</p>
+  </div>
+</section>
+
+<!-- RAZÕES -->
+<section class="reasons-section">
+  <h2 class="sb sb-bot section-title"  data-in="sb-bot"   data-out="sb-out-up">por que te amo</h2>
+  <div class="sb sb-bot divider"        data-in="sb-bot"   data-out="sb-out-up" style="transition-delay:.05s"></div>
+  <div class="reasons-grid">
+    <div class="sb sb-left reason-card"  data-in="sb-left"  data-out="sb-out-left"  style="transition-delay:.08s">
+      <span class="reason-emoji">😍</span>
+      <p class="reason-title">Seu jeito único</p>
+      <p class="reason-desc">Você tem uma forma de ser que não existe em mais ninguém. É completamente sua.</p>
+    </div>
+    <div class="sb sb-bot reason-card"   data-in="sb-bot"   data-out="sb-out-up"    style="transition-delay:.14s">
+      <span class="reason-emoji">🌙</span>
+      <p class="reason-title">Seu sorriso</p>
+      <p class="reason-desc">Você tem um sorriso que eu consigo imaginar e que já me aquece o coração.</p>
+    </div>
+    <div class="sb sb-right reason-card" data-in="sb-right" data-out="sb-out-right" style="transition-delay:.08s">
+      <span class="reason-emoji">🤍</span>
+      <p class="reason-title">Sua presença</p>
+      <p class="reason-desc">Mesmo à distância, você transmite uma paz e um aconchego que ninguém mais consegue.</p>
+    </div>
+    <div class="sb sb-left reason-card"  data-in="sb-left"  data-out="sb-out-left"  style="transition-delay:.18s">
+      <span class="reason-emoji">✨</span>
+      <p class="reason-title">Sua essência</p>
+      <p class="reason-desc">Você brilha de um jeito que não precisa de mais nada. Só sendo você já é muito.</p>
+    </div>
+    <div class="sb sb-bot reason-card"   data-in="sb-bot"   data-out="sb-out-up"    style="transition-delay:.22s">
+      <span class="reason-emoji">💌</span>
+      <p class="reason-title">Seu coração</p>
+      <p class="reason-desc">Você tem um coração enorme, cheio de cuidado. Isso é uma das coisas mais lindas em você.</p>
+    </div>
+    <div class="sb sb-right reason-card" data-in="sb-right" data-out="sb-out-right" style="transition-delay:.18s">
+      <span class="reason-emoji">🔥</span>
+      <p class="reason-title">Sua energia</p>
+      <p class="reason-desc">Você tem uma energia que ilumina tudo ao redor. É impossível não se sentir bem pensando em você.</p>
+    </div>
+  </div>
+</section>
+
+<!-- NOMES -->
+<section class="names-section">
+  <h2 class="sb sb-bot section-title" data-in="sb-bot" data-out="sb-out-up">eu te chamo de...</h2>
+  <div class="names-cloud">
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:0s;   transition-delay:.04s">Camila 🌹</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:.3s;  transition-delay:.08s">Amorzinho 💕</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:.6s;  transition-delay:.12s">Moh 🌸</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:.9s;  transition-delay:.16s">Mohzinho ✨</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:1.2s; transition-delay:.20s">Meu Amor 💖</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:1.5s; transition-delay:.24s">Minha Vida 🌙</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:1.8s; transition-delay:.28s">Princesa 👑</div>
+    <div class="sb sb-zoom name-tag" data-in="sb-zoom" data-out="sb-out-zoom" style="animation-delay:2.1s; transition-delay:.32s">Mozão 🥰</div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final-section">
+  <div class="sb sb-zoom final-hearts"  data-in="sb-zoom" data-out="sb-out-zoom">💗 💖 💗</div>
+  <h2 class="sb sb-bot final-title"     data-in="sb-bot"  data-out="sb-out-up"   style="transition-delay:.08s">Para sempre, Camila</h2>
+  <p  class="sb sb-bot final-msg"       data-in="sb-bot"  data-out="sb-out-up"   style="transition-delay:.14s">Não importa o dia, não importa o que aconteça —<br>você sempre vai ter meu amor ❤️</p>
+  <div class="sb sb-zoom forever-badge" data-in="sb-zoom" data-out="sb-out-zoom" style="transition-delay:.22s">hoje · amanhã · sempre</div>
+</section>
+
+<script>
+/* ── CURSOR ── */
+const cursor=document.getElementById('cursor');
+const trail=document.getElementById('trail');
+let mx=0,my=0,tx=0,ty=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cursor.style.left=mx+'px';cursor.style.top=my+'px';
+});
+setInterval(()=>{
+  tx+=(mx-tx)*.15;ty+=(my-ty)*.15;
+  trail.style.left=tx+'px';trail.style.top=ty+'px';
+},16);
+
+/* ── CLICK HEARTS ── */
+const CH=['💖','💕','💗','💓','💘','❤️','🌹','✨'];
+function spawnCH(x,y){
+  const el=document.createElement('div');
+  el.className='click-heart';
+  el.style.left=x+'px';el.style.top=y+'px';
+  el.textContent=CH[Math.floor(Math.random()*CH.length)];
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),820);
+}
+document.addEventListener('click',e=>spawnCH(e.clientX,e.clientY));
+document.addEventListener('touchstart',e=>spawnCH(e.touches[0].clientX,e.touches[0].clientY));
+
+/* ── CANVAS ── */
+const cv=document.getElementById('canvas'),c=cv.getContext('2d');
+function rs(){cv.width=innerWidth;cv.height=innerHeight;}
+rs();window.addEventListener('resize',rs);
+const pts=[];
+for(let i=0;i<130;i++) pts.push({
+  x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+  r:Math.random()*1.8+.4,
+  dx:(Math.random()-.5)*.25,dy:(Math.random()-.5)*.25,
+  a:Math.random()*.45+.08,
+  col:['#ff4d6d','#ff85a1','#ffb3c1','#f4a261','#ffd6e0'][~~(Math.random()*5)]
+});
+(function draw(){
+  c.clearRect(0,0,cv.width,cv.height);
+  pts.forEach(p=>{
+    c.beginPath();c.arc(p.x,p.y,p.r,0,Math.PI*2);
+    c.fillStyle=p.col;c.globalAlpha=p.a;c.fill();
+    p.x+=p.dx;p.y+=p.dy;
+    if(p.x<0||p.x>cv.width)p.dx*=-1;
+    if(p.y<0||p.y>cv.height)p.dy*=-1;
+  });
+  c.globalAlpha=1;requestAnimationFrame(draw);
+})();
+
+/* ── FLUTUANTES ── */
+const HE=['💖','💗','💕','❤️','💓','💘','🌹','🌸'];
+function sh(){
+  const h=document.createElement('div');h.className='floating-heart';
+  h.textContent=HE[~~(Math.random()*HE.length)];
+  h.style.left=Math.random()*100+'vw';
+  h.style.fontSize=(Math.random()*26+12)+'px';
+  const d=Math.random()*8+7;
+  h.style.animation=`floatUp ${d}s linear`;
+  document.body.appendChild(h);setTimeout(()=>h.remove(),(d+1)*1000);
+}
+setInterval(sh,700);for(let i=0;i<8;i++)setTimeout(sh,i*180);
+
+const PE=['🌸','🌺','🌷'];
+function sp(){
+  const p=document.createElement('div');p.className='petal';
+  p.textContent=PE[~~(Math.random()*PE.length)];
+  p.style.left=Math.random()*100+'vw';
+  const d=Math.random()*10+8;
+  p.style.animation=`petalFall ${d}s linear`;
+  document.body.appendChild(p);setTimeout(()=>p.remove(),(d+1)*1000);
+}
+setInterval(sp,1100);
+
+function ss(){
+  const s=document.createElement('div');s.className='sparkle';
+  s.textContent=['✦','✧','★','✨'][~~(Math.random()*4)];
+  s.style.left=Math.random()*100+'vw';s.style.top=Math.random()*100+'vh';
+  const d=Math.random()*3+2;
+  s.style.animation=`twinkle ${d}s ease-in-out`;
+  s.style.fontSize=(Math.random()*10+7)+'px';
+  s.style.color=['#f4a261','#ff85a1','#ffb3c1','#ffd700'][~~(Math.random()*4)];
+  document.body.appendChild(s);setTimeout(()=>s.remove(),(d+1)*1000);
+}
+setInterval(ss,380);
+
+/* ── CORAÇÃO PRINCIPAL ── */
+document.getElementById('mainHeart').addEventListener('click',function(){
+  this.style.transform='scale(1.55)';
+  setTimeout(()=>this.style.transform='',280);
+  const r=this.getBoundingClientRect();
+  for(let i=0;i<7;i++) setTimeout(()=>spawnCH(
+    r.left+r.width/2+(Math.random()-.5)*90,
+    r.top+(Math.random()-.5)*40
+  ),i*75);
+});
+
+/* ══════════════════════════════════════
+   SCROLL FADE — APARECE E DESAPARECE
+══════════════════════════════════════ */
+const blocks = document.querySelectorAll('.sb');
+
+const outMap = {
+  'sb-bot':   'sb-out-up',
+  'sb-left':  'sb-out-left',
+  'sb-right': 'sb-out-right',
+  'sb-zoom':  'sb-out-zoom',
+};
+
+function tick() {
+  const vh = window.innerHeight;
+  blocks.forEach(el => {
+    const r   = el.getBoundingClientRect();
+    const inC = el.dataset.in  || 'sb-bot';
+    const outC= el.dataset.out || 'sb-out-up';
+
+    // Totalmente acima da tela → sai pra cima
+    if (r.bottom < vh * 0.05) {
+      el.classList.remove('sb-on', inC);
+      el.classList.add(outC);
+      return;
+    }
+    // Totalmente abaixo → estado inicial (entra de baixo)
+    if (r.top > vh * 0.95) {
+      el.classList.remove('sb-on', outC);
+      el.classList.add(inC);
+      return;
+    }
+    // Na tela → visível
+    el.classList.remove(inC, outC);
+    el.classList.add('sb-on');
+  });
+}
+
+// Hero começa visível
+document.querySelectorAll('.hero .sb').forEach(el => {
+  el.classList.remove(el.dataset.in);
+  el.classList.add('sb-on');
+});
+
+window.addEventListener('scroll', tick, { passive: true });
+window.addEventListener('resize', tick);
+tick();
+</script>
 </body>
 </html>
